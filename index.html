@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KINTO KMS Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+        line-height: 1.5;
+        font-weight: 400;
+        color-scheme: light dark;
+        color: rgba(255, 255, 255, 0.87);
+        background-color: #0f172a;
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --bg-card: #1e293b;
+        --bg-input: #334155;
+        --text-dim: #94a3b8;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+      }
+
+      body {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        min-width: 320px;
+        min-height: 100vh;
+        background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+      }
+
+      #app {
+        width: 100%;
+        max-width: 1600px;
+        padding: 2rem;
+        box-sizing: border-box;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        line-height: 1.1;
+        margin-bottom: 2rem;
+        background: linear-gradient(to right, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .main-nav {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .nav-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.75rem 1.5rem;
+        border-radius: 2rem;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: auto;
+      }
+
+      .nav-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      }
+
+      .vehicle-slider {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding: 0.5rem 0 1.5rem 0;
+        margin-bottom: 1rem;
+        scrollbar-width: thin;
+        justify-content: flex-start;
+      }
+
+      .vehicle-pill {
+        padding: 0.75rem 2rem;
+        border-radius: 2rem;
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-dim);
+        cursor: pointer;
+        white-space: nowrap;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .vehicle-pill.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      }
+
+      .vehicle-pill:hover:not(.active) {
+        background: rgba(255,255,255,0.05);
+      }
+
+      .dashboard-grid-single {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .card {
+        background: var(--bg-card);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 2rem;
+      }
+
+      .horizontal-form {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .form-group {
+        flex: 1;
+        min-width: 200px;
+      }
+
+      label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-dim);
+      }
+
+      input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--bg-input);
+        color: white;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+
+      button {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        border: none;
+        background: var(--primary);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+      .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .projections-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .projection-item {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .projection-value { font-size: 1.75rem; font-weight: 800; display: block; margin: 0.5rem 0; }
+      .projection-label { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; }
+
+      .table-container {
+        overflow-x: auto;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+      th, td { padding: 0.75rem 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); white-space: nowrap; }
+      th { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); }
+
+      .status-positive { color: var(--success); }
+      .status-negative { color: var(--danger); }
+      
+      .delete-btn { background: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; }
+      .delete-btn:hover { background: #ef4444 !important; color: white !important; }
+
+      /* Offline Badge */
+      #offline-badge {
+        display: none;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        padding: 0.35rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        margin-left: auto;
+      }
+      .offline-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ef4444;
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+
+      /* Toggle Switch */
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-input);
+        transition: .3s;
+        border-radius: 24px;
+      }
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+      }
+      input:checked + .toggle-slider {
+        background-color: var(--success);
+      }
+      input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+
+      /* Modal for Contract Renewal */
+      #renew-modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(5px);
+        align-items: center;
+        justify-content: center;
+      }
+      .renew-modal-content {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 1.5rem;
+        max-width: 500px;
+        width: 90%;
+        border: 1px solid rgba(255,255,255,0.1);
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .renew-modal-content h3 {
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+      }
+      .renew-modal-content .form-group {
+        margin-bottom: 1rem;
+      }
+      .renew-modal-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+
+      /* Seasonality No Data */
+      #seasonality-no-data {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-dim);
+        font-size: 1rem;
+      }
+
+      /* Admin settings row */
+      .admin-actions-row {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      /* Modal OCR */
+      #ocr-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(5px);
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-content {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 1.5rem;
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+      .modal-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+      .ocr-detected-text {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin: 1rem 0;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 1rem;
+        border-radius: 1rem;
+      }
+
+      /* Toast Notifications */
+      #toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 3000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .toast {
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        background: var(--bg-card);
+        color: white;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        border-left: 4px solid var(--primary);
+        animation: slideIn 0.3s ease-out;
+        min-width: 200px;
+      }
+      .toast.success { border-left-color: var(--success); }
+      .toast.error { border-left-color: var(--danger); }
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+
+      /* Media Queries for Responsiveness */
+      @media (max-width: 768px) {
+        #app {
+          padding: 1rem;
+        }
+
+        h1 {
+          font-size: 1.75rem;
+        }
+
+        .card {
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .horizontal-form {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .form-group {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .nav-btn {
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+        }
+
+        .vehicle-pill {
+          padding: 0.5rem 1.25rem;
+          font-size: 0.875rem;
+        }
+
+        .projections-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+        }
+
+        .projection-item {
+          padding: 1rem;
+        }
+
+        .projection-value {
+          font-size: 1.25rem;
+        }
+
+        .admin-grid {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .admin-actions-row {
+          flex-direction: column;
+        }
+
+        #toast-container {
+          right: 1rem;
+          left: 1rem;
+          bottom: 1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .projections-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .main-nav {
+          flex-wrap: wrap;
+        }
+
+        #theme-toggle {
+          margin-left: 0 !important;
+          width: 100%;
+        }
+      }
+      .progress-container {
+        height: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 5px;
+        margin-top: 1rem;
+        overflow: hidden;
+      }
+      .progress-bar {
+        height: 100%;
+        background: var(--primary);
+        width: 0%;
+        transition: width 0.5s ease-in-out;
+      }
+      .eco-score-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-top: 0.5rem;
+      }
+      .eco-score-high { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+      .eco-score-low { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+      @media print {
+        .main-nav, .horizontal-form, .vehicle-slider, .actions-column, #ocr-modal, #theme-toggle, #export-btn, #export-pdf, #export-excel, .admin-grid, #offline-badge, .admin-actions-row {
+          display: none !important;
+        }
+        .card { box-shadow: none; border: 1px solid #ddd; background: white !important; color: black !important; }
+        body { background: white !important; color: black !important; }
+        h1, h2 { color: black !important; -webkit-text-fill-color: black !important; }
+        .status-positive { color: green !important; }
+        .status-negative { color: red !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="debug-error-box" style="background: red; color: white; padding: 10px; margin: 10px; display: none; white-space: pre-wrap; font-family: monospace;"></div>
+      <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+          const div = document.getElementById('debug-error-box');
+          div.style.display = 'block';
+          div.innerHTML += 'ERROR: ' + msg + '\\n' + (error ? error.stack : '') + '\\n\\n';
+          return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+          const div = document.getElementById('debug-error-box');
+          div.style.display = 'block';
+          div.innerHTML += 'PROMISE REJECTION: ' + (event.reason ? (event.reason.stack || event.reason) : event) + '\\n\\n';
+        });
+      </script>
+      <nav class="main-nav">
+        <button class="nav-btn active" data-target="dashboard-section">Dashboard</button>
+        <button class="nav-btn" data-target="admin-section">Administração</button>
+        <div id="offline-badge" style="display:none;">
+          <span class="offline-dot"></span>
+          <span>Offline</span>
+        </div>
+        <button id="theme-toggle" class="nav-btn" style="margin-left:auto;">🌓 Tema</button>
+      </nav>
+
+      <h1>KINTO Tracker</h1>
+      
+      <div id="vehicle-selector" class="vehicle-slider">
+        <!-- Plates injected here by JS -->
+      </div>
+      
+      <!-- Administration Section -->
+      <section id="admin-section" style="display: none;">
+        <div class="card">
+          <h2 style="margin-top:0">Configurações do Contrato</h2>
+          <div class="admin-grid">
+            <div class="form-group">
+              <label for="plate-input">Matrícula da Viatura</label>
+              <input type="text" id="plate-input" placeholder="00-AA-00" />
+            </div>
+            <div class="form-group">
+              <label for="start-date-input">Data de Início</label>
+              <input type="date" id="start-date-input" />
+            </div>
+            <div class="form-group">
+              <label for="duration-input">Duração (Meses)</label>
+              <input type="number" id="duration-input" value="60" />
+            </div>
+            <div class="form-group">
+              <label for="limit-input">Limite KM (Contrato)</label>
+              <input type="number" id="limit-input" value="50000" />
+            </div>
+            <div class="form-group">
+              <label for="max-limit-input">Máximo KM (Contrato)</label>
+              <input type="number" id="max-limit-input" value="65000" />
+            </div>
+            <div class="form-group">
+              <label for="cost-input">Custo Excesso (€/KM)</label>
+              <input type="number" id="cost-input" value="0.069" step="0.001" />
+            </div>
+          </div>
+
+          <!-- Notifications Toggle -->
+          <div class="admin-actions-row" style="margin-bottom: 1rem;">
+            <div class="toggle-container">
+              <label class="toggle-switch">
+                <input type="checkbox" id="notifications-toggle" />
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="color: var(--text-dim); font-size: 0.875rem;">Notificações</span>
+            </div>
+          </div>
+
+          <div class="admin-actions-row">
+            <button id="save-settings-btn">Guardar Configurações</button>
+            <button id="renew-contract-btn" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Renovar Contrato</button>
+            <label for="import-json" class="nav-btn" style="background:var(--bg-input); border-radius:0.75rem; display:flex; align-items:center; cursor:pointer; margin:0;">📥 Importar JSON
+              <input type="file" id="import-json" accept=".json" style="display:none;" />
+            </label>
+            <button id="delete-vehicle-btn" class="delete-btn">Remover Viatura</button>
+          </div>
+        </div>
+
+        <!-- Sync Section -->
+        <div class="card">
+          <h2 style="margin-top:0">Sincronização entre Dispositivos</h2>
+          <div class="admin-actions-row">
+            <button id="sync-export-btn" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">📤 Exportar Dados (Sync)</button>
+            <label class="nav-btn" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-radius:0.75rem; display:flex; align-items:center; cursor:pointer; margin:0; padding: 0.75rem 1.5rem;">
+              📥 Importar Sync JSON
+              <input type="file" id="sync-import-input" accept=".json" style="display:none;" />
+            </label>
+          </div>
+          <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 1rem;">Exporta todos os contratos e registos de quilometragem num único ficheiro. Ao importar, os dados são fundidos inteligentemente sem duplicar registos.</p>
+        </div>
+      </section>
+
+      <!-- Dashboard Section -->
+      <div id="smart-alerts" style="display:none; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; font-weight: bold; text-align: center;"></div>
+
+      <section id="dashboard-section">
+        <div class="dashboard-grid-single">
+          <div class="main-panel">
+            <div class="card">
+              <h2 style="margin-top:0; margin-bottom: 1.5rem;">Nova Entrada</h2>
+              <div class="horizontal-form">
+                <div class="form-group">
+                  <label for="date-input">Data</label>
+                  <input type="date" id="date-input" />
+                </div>
+                <div class="form-group">
+                  <label for="kms-input">Kilómetros Atuais</label>
+                  <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="number" id="kms-input" placeholder="Ex: 2150" style="flex: 1;" />
+                    <label for="ocr-input" class="nav-btn" title="Ler KMs por Foto" style="margin: 0; padding: 0.75rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--bg-input);">
+                      📷
+                      <input type="file" id="ocr-input" accept="image/*" capture="environment" style="display: none;" />
+                    </label>
+                  </div>
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-end; gap: 0.5rem;">
+                  <button id="save-btn" style="margin: 0; width: 100%;">Guardar Entrada</button>
+                  <button id="cancel-btn" style="margin: 0; background: var(--bg-input); display: none; width: 100%;">Cancelar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 style="margin-top:0">Evolução Mensal</h2>
+              <div style="height: 450px;">
+                <canvas id="usage-chart"></canvas>
+              </div>
+            </div>
+
+            <div class="card" id="seasonality-card">
+              <h2 style="margin-top:0">Sazonalidade (Este Ano vs Anterior)</h2>
+              <div id="seasonality-no-data" style="display:none; text-align:center; padding:2rem; color:var(--text-dim); font-size:1rem;"></div>
+              <div style="height: 300px;">
+                <canvas id="seasonality-chart"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 style="margin-top:0">Projeção Fim de Contrato (60 meses)</h2>
+              <div class="projections-grid" id="projections-container">
+                <!-- Content generated by JS -->
+              </div>
+            </div>
+
+            <div class="card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin:0">Histórico de Utilização</h2>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                  <button id="export-pdf" style="padding: 0.5rem 1rem; font-size: 0.8rem; width: auto; margin: 0; background: rgba(239, 68, 68, 0.2); color: #ef4444;">PDF</button>
+                  <button id="export-excel" style="padding: 0.5rem 1rem; font-size: 0.8rem; width: auto; margin: 0; background: rgba(16, 185, 129, 0.2); color: #10b981;">Excel</button>
+                  <button id="export-btn" style="padding: 0.5rem 1rem; font-size: 0.8rem; width: auto; margin: 0; background: rgba(255,255,255,0.05);">JSON</button>
+                </div>
+              </div>
+              
+              <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>KM's</th>
+                      <th>KM's Face Ant.</th>
+                      <th>Dias</th>
+                      <th>KM/Dia</th>
+                      <th>Média Acum.</th>
+                      <th>Teórico (50k)</th>
+                      <th>Diff (50k)</th>
+                      <th>Var (50k)</th>
+                      <th>Teórico (65k) Meta</th>
+                      <th>Diff (65k) Meta</th>
+                      <th>Var (65k) Meta</th>
+                      <th>Custo Excesso</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="history-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- OCR Confirmation Modal -->
+      <div id="ocr-modal">
+        <div class="modal-content">
+          <h3>Confirmar KMs Lidos</h3>
+          <p style="color: var(--text-dim);">Detetámos o seguinte valor na imagem:</p>
+          <div id="ocr-value" class="ocr-detected-text">0</div>
+          <p style="font-size: 0.8rem; color: var(--text-dim);">Pode editar se o valor estiver incorreto.</p>
+          <input type="number" id="ocr-edit-input" style="text-align: center; font-size: 1.5rem; margin-bottom: 1rem;" />
+          <div class="modal-actions">
+            <button id="ocr-confirm-btn" style="flex: 2;">Confirmar</button>
+            <button id="ocr-cancel-btn" style="flex: 1; background: var(--bg-input);">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Renew Contract Modal -->
+      <div id="renew-modal">
+        <div class="renew-modal-content">
+          <h3>Renovar Contrato</h3>
+          <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1rem;">O contrato atual será guardado no histórico. A quilometragem será mantida.</p>
+          <div class="form-group">
+            <label for="renew-start-date">Nova Data de Início</label>
+            <input type="date" id="renew-start-date" />
+          </div>
+          <div class="form-group">
+            <label for="renew-duration">Duração (Meses)</label>
+            <input type="number" id="renew-duration" value="60" />
+          </div>
+          <div class="form-group">
+            <label for="renew-limit">Limite KM (Contrato)</label>
+            <input type="number" id="renew-limit" value="50000" />
+          </div>
+          <div class="form-group">
+            <label for="renew-max-limit">Máximo KM (Contrato)</label>
+            <input type="number" id="renew-max-limit" value="65000" />
+          </div>
+          <div class="form-group">
+            <label for="renew-cost">Custo Excesso (€/KM)</label>
+            <input type="number" id="renew-cost" value="0.069" step="0.001" />
+          </div>
+          <div class="renew-modal-actions">
+            <button id="renew-modal-confirm" style="flex: 2; background: var(--warning); color: #000;">Confirmar Renovação</button>
+            <button id="renew-modal-close" style="flex: 1; background: var(--bg-input);">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Container -->
+      <div id="toast-container"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

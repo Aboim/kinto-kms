@@ -203,15 +203,32 @@ if (UI.syncImportInput) {
             try {
                 const data = JSON.parse(e.target?.result as string);
                 
+                if (Array.isArray(data)) {
+                    if (!activePlate) {
+                        showToast('Selecione uma viatura primeiro para importar.', 'error');
+                        return;
+                    }
+                    if (!confirm(`Detetado ficheiro legacy (formato antigo). Deseja importar ${data.length} registos para a viatura ${activePlate}?\\nO historico atual desta viatura sera substituido.`)) return;
+                    
+                    await api.storage.clearMileage(activePlate);
+                    for (const entry of data) {
+                        await api.storage.saveMileage({ id: entry.id, plate: activePlate, date: entry.DATA, kms: entry["KM's"] });
+                    }
+                    showToast('Dados importados com sucesso!', 'success');
+                    await loadVehicleData();
+                    renderHistory();
+                    return;
+                }
+                
                 if (!data.version || !data.contracts || !data.mileage) {
-                    showToast('Ficheiro de sincronização inválido!', 'error');
+                    showToast('Ficheiro de sincronizacao invalido! Formato esperado: {version, contracts, mileage} ou array legacy [{id, DATA, KM\'s}].', 'error');
                     return;
                 }
                 
                 const contractCount = data.contracts.length;
                 const mileageCount = data.mileage.length;
                 
-                if (!confirm(`Importar ${contractCount} contratos e ${mileageCount} registos de quilometragem? Os dados serão fundidos sem duplicar registos existentes.`)) return;
+                if (!confirm(`Importar ${contractCount} contratos e ${mileageCount} registos de quilometragem? Os dados serao fundidos sem duplicar registos existentes.`)) return;
                 
                 await api.storage.importContracts(data.contracts);
                 await api.storage.importMileage(data.mileage);
@@ -230,7 +247,7 @@ if (UI.syncImportInput) {
                 renderHistory();
             } catch (err) {
                 console.error(err);
-                showToast('Erro ao importar ficheiro de sincronização. Verifique se é um ficheiro válido.', 'error');
+                showToast('Erro ao importar ficheiro de sincronizacao. Verifique se e um ficheiro valido.', 'error');
             }
         };
         reader.readAsText(file);

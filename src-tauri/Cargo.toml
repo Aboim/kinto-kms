@@ -1,0 +1,43 @@
+[package]
+name = "kinto-kms"
+version = "1.0.0"
+description = "KINTO KMS - Gestao de Quilometragem de Frotas"
+authors = ["KINTO KMS"]
+edition = "2021"
+
+[lib]
+name = "kinto_kms_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-notification = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.31", features = ["bundled"] }
+uuid = { version = "1", features = ["v4"] }
+rand = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+printpdf = "0.7"
+rust_xlsxwriter = "0.79"
+calamine = "0.26"
+base64 = "0.22"
+leptess = { version = "0.14", optional = true }
+image = { version = "0.25", optional = true }
+
+[features]
+default = []
+ocr = ["leptess", "image"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
